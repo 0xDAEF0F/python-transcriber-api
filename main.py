@@ -27,6 +27,7 @@ def hello_world():
         result = f""
         for segment in segments:
             result += f"{segment.text} "
+        result += "\n"
         
         return result
     except Exception as e:
