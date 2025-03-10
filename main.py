@@ -22,7 +22,7 @@ def hello_world():
         if not os.path.exists(audio_path):
             return f"Error: File {audio_path} not found"
             
-        segments, _ = model.transcribe(audio_path, beam_size=5, language="English", without_timestamps=True)
+        segments, _ = model.transcribe(audio_path, beam_size=5, language="en", without_timestamps=True)
         
         result = f""
         for segment in segments:
