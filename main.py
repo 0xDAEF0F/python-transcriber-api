@@ -74,7 +74,7 @@ def transcribe():
         )
 
         result = " ".join(segment.text for segment in segments)
-        return jsonify({"text": result + "\n"})
+        return jsonify({"text": result})
     except Exception as e:
         print(str(e))
         logger.error(f"Transcription error: {traceback.format_exc()}")
