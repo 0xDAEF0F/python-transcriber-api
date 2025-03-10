@@ -13,8 +13,7 @@ from faster_whisper import WhisperModel
 
 model_size = "large-v3"
 
-# Try to use CPU instead of GPU if you're having issues
-model = WhisperModel(model_size, device="cpu", compute_type="int8")
+model = WhisperModel(model_size, device="cuda", compute_type="float16")
 logger.info(f"Model loaded with {model}")
 
 # segments, info = model.transcribe("audio.mp3", beam_size=5)
