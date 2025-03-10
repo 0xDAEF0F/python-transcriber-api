@@ -1,10 +1,36 @@
 from flask import Flask, request, jsonify
 from faster_whisper import WhisperModel
+from openai import OpenAI
 import logging
 import os
 import traceback
-import time
 import io
+
+system_prompt = """
+You are an expert text transcription assistant designed to correct errors in text while preserving
+the original meaning and intent. Your sole purpose is to receive text that may contain gramatical
+errors and produce a corrected version.
+
+## Context About the Text Creator
+- Is a computer science engineer.
+- His development environment is macOS/Linux.
+
+## Your Responsibilities:
+- Correct spelling errors and grammatical mistakes
+- Fix sentence structure maintaining the original meaning
+- The author prefers lowercaps to seem more casual
+- Maintain technical terminology accuracy based on the context provided
+
+## What *NOT* to Do:
+- Do not add new information or expand on ideas
+- Do not remove content unless it's clearly redundant
+- Do not alter specialized terminology unless incorrectly used
+- Do not comment on the quality of the writing
+- Do *not* ever try to answer the text's original question. That is not your task.
+
+## Output Format:
+Provide *only* the corrected text without explanations, remarks or comments.
+"""
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -15,34 +41,15 @@ model = WhisperModel("large-v3", device="cuda", compute_type="float16")
 
 logger.info(f"'large-v3' model loaded")
 
+openai = OpenAI(
+    api_key=os.getenv("OPENAI_API_KEY"),
+    base_url="https://api.deepseek.com",
+)
+
 
 @app.route("/")
 def hello_world():
-    try:
-        audio_path = "test.wav"
-        if not os.path.exists(audio_path):
-            return f"Error: File {audio_path} not found"
-
-        start_time = time.time()
-
-        segments, _ = model.transcribe(
-            audio_path, beam_size=5, language="en", without_timestamps=True
-        )
-
-        end_time = time.time()
-
-        logger.info(f"Transcription completed in {end_time - start_time:.2f} seconds")
-
-        result = f""
-        for segment in segments:
-            result += f"{segment.text} "
-        result += "\n"
-
-        return result
-    except Exception as e:
-        error_msg = traceback.format_exc()
-        logger.error(f"Transcription error: {error_msg}")
-        return f"Error during transcription: {str(e)}"
+    return "Hello, World!"
 
 
 @app.route("/transcribe", methods=["POST"])
@@ -69,6 +76,38 @@ def transcribe():
         print(str(e))
         logger.error(f"Transcription error: {traceback.format_exc()}")
         return jsonify({"error": str(e)}), 500
+
+
+@app.route("/clean_transcription", methods=["POST"])
+def clean_transcription():
+    transcription = request.get_json()
+    original_text = transcription["text"]
+    try:
+        response = openai.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {
+                    "role": "system",
+                    "content": system_prompt,
+                },
+                {
+                    "role": "user",
+                    "content": f'Please correct the following text: "{original_text}"',
+                },
+            ],
+        )
+
+        return jsonify(
+            {
+                "success": True,
+                "original_text": original_text,
+                "text": response.choices[0].message.content,
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Clean transcription error: {traceback.format_exc()}")
+        return jsonify({"error": str(e), "success": False}), 500
 
 
 if __name__ == "__main__":
