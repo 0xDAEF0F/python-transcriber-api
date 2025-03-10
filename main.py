@@ -4,6 +4,7 @@ import logging
 import os
 import traceback
 import time
+import io
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -50,16 +51,20 @@ def transcribe():
 
     if len(audio_data) == 0:
         return jsonify({"error": "No audio data provided"}), 400
+
     try:
+        audio_file = io.BytesIO(audio_data)
+
         segments, _ = model.transcribe(
-            audio_data,
+            audio_file,
             beam_size=5,
             language="en",
             without_timestamps=True,
             task="transcribe",
         )
+
         result = " ".join(segment.text for segment in segments)
-        return jsonify({"result": result})
+        return jsonify({"text": result + "\n"})
     except Exception as e:
         print(str(e))
         logger.error(f"Transcription error: {traceback.format_exc()}")
