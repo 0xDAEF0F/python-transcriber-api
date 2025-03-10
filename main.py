@@ -32,6 +32,8 @@ errors and produce a corrected version.
 Provide *only* the corrected text without explanations, remarks or comments.
 """
 
+hotwords = "js react nextjs tokio async await rust typescript git github vscode cli api json tcp ip ssh"
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
@@ -68,6 +70,7 @@ def transcribe():
             language="en",
             without_timestamps=True,
             task="transcribe",
+            hotwords=hotwords,
         )
 
         result = " ".join(segment.text for segment in segments)
@@ -78,7 +81,7 @@ def transcribe():
         return jsonify({"error": str(e)}), 500
 
 
-@app.route("/clean_transcription", methods=["POST"])
+@app.route("/clean-transcription", methods=["POST"])
 def clean_transcription():
     transcription = request.get_json()
     original_text = transcription["text"]
