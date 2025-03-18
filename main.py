@@ -24,6 +24,8 @@ errors or bad structure and produce a corrected/improved version.
 - Correct spelling errors and grammatical mistakes
 - Fix sentence structure maintaining the original meaning
 - The author prefers lowercaps to seem more casual
+- Do not forget to add proper punctuation if you are sure about the author's intent,
+    - e.g., "how center div css" -> "how to center a div in css?"
 - Maintain technical terminology accuracy based on the aforementioned Context
 
 ## What *NOT* to Do:
